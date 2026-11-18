@@ -1,95 +1,190 @@
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <ctime>
-#include <chrono>
+
+#include <iostream>    // For input and output
+#include <vector>      // For storing array elements
+#include <algorithm>   // For swap function
+#include <ctime>       // For time()
+#include <chrono>      // For measuring execution time
+
 using namespace std;
 using namespace chrono;
 
 // Bubble Sort
 void bubble(vector<int>& a){
-    for(int i=0;i<a.size()-1;i++)
-        for(int j=0;j<a.size()-i-1;j++)
-            if(a[j]>a[j+1]) swap(a[j],a[j+1]);
+
+    // Repeat passes through the array
+    for(int i=0; i<a.size()-1; i++)
+
+        // Compare adjacent elements
+        for(int j=0; j<a.size()-i-1; j++)
+
+            // Swap if elements are in wrong order
+            if(a[j] > a[j+1])
+                swap(a[j], a[j+1]);
 }
 
 // Selection Sort
 void selection(vector<int>& a){
-    for(int i=0;i<a.size()-1;i++){
-        int m=i;
-        for(int j=i+1;j<a.size();j++)
-            if(a[j]<a[m]) m=j;
-        swap(a[i],a[m]);
+
+    // Move through each array position
+    for(int i=0; i<a.size()-1; i++){
+
+        int m = i; // Assume current element is minimum
+
+        // Find the smallest element in remaining array
+        for(int j=i+1; j<a.size(); j++)
+
+            if(a[j] < a[m])
+                m = j;
+
+        // Place minimum element at correct position
+        swap(a[i], a[m]);
     }
 }
 
 // Insertion Sort
 void insertion(vector<int>& a){
-    for(int i=1;i<a.size();i++){
-        int key=a[i],j=i-1;
+
+    // Start from second element
+    for(int i=1; i<a.size(); i++){
+
+        int key = a[i]; // Store current element
+        int j = i-1;
+
+        // Shift larger elements one position right
         while(j>=0 && a[j]>key){
-            a[j+1]=a[j];
+            a[j+1] = a[j];
             j--;
         }
-        a[j+1]=key;
+
+        // Insert key at its correct position
+        a[j+1] = key;
     }
 }
 
-// Merge Sort
-void merge(vector<int>& a,int l,int m,int r){
-    vector<int> L(a.begin()+l,a.begin()+m+1),R(a.begin()+m+1,a.begin()+r+1);
-    int i=0,j=0,k=l;
-    while(i<L.size()&&j<R.size()) a[k++]=(L[i]<R[j])?L[i++]:R[j++];
-    while(i<L.size()) a[k++]=L[i++];
-    while(j<R.size()) a[k++]=R[j++];
+// Merge Sort - Merge two sorted parts
+void merge(vector<int>& a, int l, int m, int r){
+
+    // Create temporary left and right arrays
+    vector<int> L(a.begin()+l, a.begin()+m+1);
+    vector<int> R(a.begin()+m+1, a.begin()+r+1);
+
+    int i=0, j=0, k=l;
+
+    // Compare and merge elements from both arrays
+    while(i<L.size() && j<R.size())
+        a[k++] = (L[i]<R[j]) ? L[i++] : R[j++];
+
+    // Copy remaining left elements
+    while(i<L.size())
+        a[k++] = L[i++];
+
+    // Copy remaining right elements
+    while(j<R.size())
+        a[k++] = R[j++];
 }
-void mergeSort(vector<int>& a,int l,int r){
+
+// Recursive Merge Sort function
+void mergeSort(vector<int>& a, int l, int r){
+
+    // Check whether the array has more than one element
     if(l<r){
-        int m=(l+r)/2;
-        mergeSort(a,l,m);
-        mergeSort(a,m+1,r);
-        merge(a,l,m,r);
+
+        int m = (l+r)/2; // Find middle position
+
+        mergeSort(a, l, m);   // Sort left half
+        mergeSort(a, m+1, r); // Sort right half
+
+        merge(a, l, m, r);    // Merge both sorted halves
     }
 }
 
-// Quick Sort
-int part(vector<int>& a,int l,int h){
-    int p=a[h],i=l-1;
-    for(int j=l;j<h;j++)
-        if(a[j]<p) swap(a[++i],a[j]);
-    swap(a[i+1],a[h]);
-    return i+1;
+// Quick Sort - Partition function
+int part(vector<int>& a, int l, int h){
+
+    int p = a[h]; // Select last element as pivot
+    int i = l-1;  // Index of smaller element
+
+    // Place smaller elements before the pivot
+    for(int j=l; j<h; j++)
+
+        if(a[j]<p)
+            swap(a[++i], a[j]);
+
+    // Place pivot in its correct position
+    swap(a[i+1], a[h]);
+
+    return i+1; // Return pivot position
 }
-void quick(vector<int>& a,int l,int h){
+
+// Recursive Quick Sort function
+void quick(vector<int>& a, int l, int h){
+
+    // Continue if more than one element exists
     if(l<h){
-        int p=part(a,l,h);
-        quick(a,l,p-1);
-        quick(a,p+1,h);
+
+        int p = part(a, l, h); // Partition the array
+
+        quick(a, l, p-1); // Sort left part
+        quick(a, p+1, h); // Sort right part
     }
 }
 
+// Main function
 int main(){
-    const int n=100;
-    vector<int> a(n),b;
-    srand(time(0));
 
-    for(int &x:a) x=rand()%1000;
+    const int n = 100; // Number of elements
 
-    auto test=[&](string name, auto sortFun){
-        b=a;
-        auto s=high_resolution_clock::now();
-        sortFun(b);
-        auto e=high_resolution_clock::now();
-        cout<<name<<" : "
-            <<duration_cast<microseconds>(e-s).count()
-            <<" us\n";
+    vector<int> a(n), b; // Create original and temporary arrays
+
+    srand(time(0)); // Initialize random number generator
+
+    // Generate random numbers
+    for(int &x : a)
+        x = rand()%1000;
+
+    // Function to test sorting algorithm execution time
+    auto test = [&](string name, auto sortFun){
+
+        b = a; // Copy original array for fair comparison
+
+        // Start measuring execution time
+        auto s = high_resolution_clock::now();
+
+        sortFun(b); // Execute sorting algorithm
+
+        // Stop measuring execution time
+        auto e = high_resolution_clock::now();
+
+        // Display algorithm name and execution time
+        cout << name << " : "
+             << duration_cast<microseconds>(e-s).count()
+             << " us\n";
     };
 
-    test("Bubble",[](vector<int>& x){bubble(x);});
-    test("Selection",[](vector<int>& x){selection(x);});
-    test("Insertion",[](vector<int>& x){insertion(x);});
-    test("Merge",[](vector<int>& x){mergeSort(x,0,x.size()-1);});
-    test("Quick",[](vector<int>& x){quick(x,0,x.size()-1);});
+    // Test Bubble Sort
+    test("Bubble", [](vector<int>& x){
+        bubble(x);
+    });
 
-    return 0;
+    // Test Selection Sort
+    test("Selection", [](vector<int>& x){
+        selection(x);
+    });
+
+    // Test Insertion Sort
+    test("Insertion", [](vector<int>& x){
+        insertion(x);
+    });
+
+    // Test Merge Sort
+    test("Merge", [](vector<int>& x){
+        mergeSort(x, 0, x.size()-1);
+    });
+
+    // Test Quick Sort
+    test("Quick", [](vector<int>& x){
+        quick(x, 0, x.size()-1);
+    });
+
+    return 0; // End program
 }
